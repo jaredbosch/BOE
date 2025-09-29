@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back of the Envelope Model</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #0f172a;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 2.5em;
+        }
+        .global-params {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-weight: 500;
+            font-size: 0.9em;
+            color: #475569;
+        }
+        input[type="number"] {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .main-layout {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .section {
+            flex: 1;
+            min-width: 500px;
+        }
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-collapse: collapse;
+        }
+        th {
+            background-color: #f1f5f9;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        .numeric {
+            text-align: right;
+            font-weight: 500;
+        }
+        .negative {
+            color: #ef4444;
+        }
+        .metrics {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .metrics th, .metrics td {
+            padding: 15px 12px;
+        }
+        .metrics td:first-child {
+            font-weight: 500;
+            background-color: #f1f5f9;
+        }
+        .highlight {
+            background-color: #ecfdf5;
+            font-weight: 600;
+        }
+        .right-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .income-table, .expenses-table {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+        .income-table table, .expenses-table table {
+            border-radius: 0;
+            box-shadow: none;
+        }
+        .income-table th, .income-table td {
+            padding: 12px 8px;
+        }
+        .subheader {
+            grid-column: 1 / -1;
+        }
+        .export-btn {
+            display: block;
+            margin: 30px auto 0;
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1em;
+            transition: background-color 0.2s;
+        }
+        .export-btn:hover {
+            background: #2563eb;
+        }
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            .global-params {
+                flex-direction: column;
+                align-items: center;
+            }
+            .section {
+                min-width: auto;
+            }
+            .income-table, .expenses-table {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Back of the Envelope Model</h1>
+        <div class="global-params">
+            <div class="param-group">
+                <label for="units">Number of Units</label>
+                <input id="units" type="number" value="52">
+            </div>
+            <div class="param-group">
+                <label for="vac_rate">Vacancy Rate (%)</label>
+                <input id="vac_rate" type="number" step="0.1" value="5">
+            </div>
+            <div class="param-group">
+                <label for="mgmt_pct">Management Fee (%)</label>
+                <input id="mgmt_pct" type="number" step="0.1" value="10">
+            </div>
+            <div class="param-group">
+                <label for="selling_cost_pct">Selling Costs (%)</label>
+                <input id="selling_cost_pct" type="number" step="0.1" value="5">
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="left-section">
+                <table>
+                    <thead>
+                        <tr><th colspan="3">Capital Stack</th></tr>
+                        <tr><th></th><th class="numeric">Total</th><th class="numeric">$/Key</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Purchase Price</td><td class="numeric"><input id="purchase_total" type="number" value="3400000"></td><td class="numeric"><span id="purchase_pkey"></span></td></tr>
+                        <tr><td>Renovations</td><td class="numeric"><input id="reno_total" type="number" value="1000000"></td><td class="numeric"><span id="reno_pkey"></span></td></tr>
+                        <tr><td>Closing Costs</td><td class="numeric"><input id="closing_total" type="number" value="68000"></td><td class="numeric"><span id="closing_pkey"></span></td></tr>
+                        <tr class="highlight"><td><strong>Total</strong></td><td class="numeric"><span id="total_cost"></span></td><td class="numeric"><span id="total_pkey"></span></td></tr>
+                        <tr><td>Equity</td><td class="numeric"><span id="equity_total"></span></td><td class="numeric"><span id="equity_pkey"></span></td></tr>
+                        <tr><td>Debt</td><td class="numeric"><span id="debt_total"></span></td><td class="numeric"><span id="debt_pkey"></span></td></tr>
+                        <tr class="highlight"><td><strong>Total</strong></td><td class="numeric"><span id="total_cost2"></span></td><td class="numeric"><span id="total_pkey2"></span></td></tr>
+                    </tbody>
+                </table>
+
+                <table>
+                    <thead>
+                        <tr><th colspan="2">Debt Terms</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>LTV</td><td><input id="ltv" type="number" step="0.1" value="75"> %</td></tr>
+                        <tr><td>Interest Rate</td><td><input id="interest_rate" type="number" step="0.1" value="6"> %</td></tr>
+                        <tr><td>Amortization (years)</td><td><input id="amort_years" type="number" value="25"></td></tr>
+                        <tr><td>Exit Cap Rate</td><td><input id="exit_cap" type="number" step="0.1" value="7"> %</td></tr>
+                    </tbody>
+                </table>
+
+                <table>
+                    <thead>
+                        <tr><th colspan="3">Disposition</th></tr>
+                        <tr><th></th><th class="numeric">Total</th><th class="numeric">$/Key</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Sale</td><td class="numeric"><span id="net_sale"></span></td><td class="numeric"><span id="sale_pkey"></span></td></tr>
+                        <tr><td>Profit</td><td class="numeric"><span id="profit"></span></td><td class="numeric"><span id="profit_pkey"></span></td></tr>
+                        <tr class="highlight"><td><strong>Equity Multiple</strong></td><td class="numeric"><span id="equity_multiple"></span></td><td></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="right-section">
+                <div class="income-table">
+                    <table>
+                        <thead>
+                            <tr><th colspan="2">In-Place Income</th></tr>
+                            <tr><th></th><th class="numeric">In-Place</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Gross Potential Rent</td><td class="numeric"><input id="gpr_ip" type="number" value="518400"></td></tr>
+                            <tr><td class="negative">Vacancy</td><td class="numeric negative"><span id="vac_ip"></span></td></tr>
+                            <tr class="highlight"><td><strong>Revenue</strong></td><td class="numeric"><span id="egi_ip"></span></td></tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <thead>
+                            <tr><th colspan="2">Stabilized Income</th></tr>
+                            <tr><th></th><th class="numeric">Stabilized</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Gross Potential Rent</td><td class="numeric"><input id="gpr_s" type="number" value="746000"></td></tr>
+                            <tr><td class="negative">Vacancy</td><td class="numeric negative"><span id="vac_s"></span></td></tr>
+                            <tr class="highlight"><td><strong>Revenue</strong></td><td class="numeric"><span id="egi_s"></span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="expenses-table">
+                    <table>
+                        <thead>
+                            <tr><th colspan="2">In-Place Expenses</th></tr>
+                            <tr><th></th><th class="numeric">In-Place</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>RE Taxes</td><td class="numeric"><input id="re_tax_ip" type="number" value="23000"></td></tr>
+                            <tr><td>Insurance</td><td class="numeric"><input id="ins_ip" type="number" value="34000"></td></tr>
+                            <tr><td>Utilities</td><td class="numeric"><input id="util_ip" type="number" value="35000"></td></tr>
+                            <tr><td>Management</td><td class="numeric"><span id="mgmt_ip"></span></td></tr>
+                            <tr><td>Repairs & Maintenance</td><td class="numeric"><input id="rep_ip" type="number" value="25000"></td></tr>
+                            <tr class="highlight"><td><strong>Total Expenses</strong></td><td class="numeric"><span id="total_exp_ip"></span></td></tr>
+                            <tr class="highlight"><td><strong>NOI</strong></td><td class="numeric"><span id="noi_ip"></span></td></tr>
+                            <tr><td>NOI Margin</td><td class="numeric"><span id="noi_margin_ip"></span>%</td></tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <thead>
+                            <tr><th colspan="2">Stabilized Expenses</th></tr>
+                            <tr><th></th><th class="numeric">Stabilized</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>RE Taxes</td><td class="numeric"><input id="re_tax_s" type="number" value="65000"></td></tr>
+                            <tr><td>Insurance</td><td class="numeric"><input id="ins_s" type="number" value="51550"></td></tr>
+                            <tr><td>Utilities</td><td class="numeric"><input id="util_s" type="number" value="36500"></td></tr>
+                            <tr><td>Management</td><td class="numeric"><span id="mgmt_s"></span></td></tr>
+                            <tr><td>Repairs & Maintenance</td><td class="numeric"><input id="rep_s" type="number" value="52000"></td></tr>
+                            <tr class="highlight"><td><strong>Total Expenses</strong></td><td class="numeric"><span id="total_exp_s"></span></td></tr>
+                            <tr class="highlight"><td><strong>NOI</strong></td><td class="numeric"><span id="noi_s"></span></td></tr>
+                            <tr><td>NOI Margin</td><td class="numeric"><span id="noi_margin_s"></span>%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <table class="metrics">
+            <thead>
+                <tr><th></th><th class="numeric">In-Place</th><th class="numeric">Stabilized</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Debt Service</td><td colspan="2" class="numeric"><span id="debt_service"></span></td></tr>
+                <tr><td>DSCR</td><td class="numeric"><span id="dscr_ip"></span></td><td class="numeric"><span id="dscr_s"></span></td></tr>
+                <tr class="highlight"><td>Yield</td><td class="numeric"><span id="yield_ip"></span>%</td><td class="numeric"><span id="yield_s"></span>%</td></tr>
+                <tr><td>Market Cap Rate</td><td class="numeric">6.50%</td><td></td></tr>
+            </tbody>
+        </table>
+
+        <button class="export-btn" id="exportBtn">Export to CSV</button>
+    </div>
+
+    <script>
+        function calcDebtService(principal, annualRate, years) {
+            if (principal <= 0 || annualRate <= 0 || years <= 0) return 0;
+            const power = Math.pow(1 + annualRate, years);
+            return principal * annualRate * power / (power - 1);
+        }
+
+        function formatNumber(num, decimals = 0) {
+            return num.toLocaleString(undefined, { 
+                minimumFractionDigits: decimals, 
+                maximumFractionDigits: decimals 
+            });
+        }
+
+        function formatMoney(num) {
+            return num.toLocaleString('en-US', { 
+                minimumFractionDigits: 0, 
+                maximumFractionDigits: 2 
+            });
+        }
+
+        function formatPercent(num) {
+            return num.toFixed(2);
+        }
+
+        function updateAll() {
+            const units = parseFloat(document.getElementById('units').value) || 52;
+            const purchase_total = parseFloat(document.getElementById('purchase_total').value) || 3400000;
+            const reno_total = parseFloat(document.getElementById('reno_total').value) || 1000000;
+            const closing_total = parseFloat(document.getElementById('closing_total').value) || 68000;
+            const ltv = parseFloat(document.getElementById('ltv').value) / 100 || 0.75;
+            const interest_rate = parseFloat(document.getElementById('interest_rate').value) / 100 || 0.06;
+            const amort_years = parseFloat(document.getElementById('amort_years').value) || 25;
+            const exit_cap = parseFloat(document.getElementById('exit_cap').value) / 100 || 0.07;
+            const gpr_ip = parseFloat(document.getElementById('gpr_ip').value) || 518400;
+            const gpr_s = parseFloat(document.getElementById('gpr_s').value) || 746000;
+            const vac_rate = parseFloat(document.getElementById('vac_rate').value) / 100 || 0.05;
+            const re_tax_ip = parseFloat(document.getElementById('re_tax_ip').value) || 23000;
+            const re_tax_s = parseFloat(document.getElementById('re_tax_s').value) || 65000;
+            const ins_ip = parseFloat(document.getElementById('ins_ip').value) || 34000;
+            const ins_s = parseFloat(document.getElementById('ins_s').value) || 51550;
+            const util_ip = parseFloat(document.getElementById('util_ip').value) || 35000;
+            const util_s = parseFloat(document.getElementById('util_s').value) || 36500;
+            const rep_ip = parseFloat(document.getElementById('rep_ip').value) || 25000;
+            const rep_s = parseFloat(document.getElementById('rep_s').value) || 52000;
+            const mgmt_pct = parseFloat(document.getElementById('mgmt_pct').value) / 100 || 0.10;
+            const selling_cost_pct = parseFloat(document.getElementById('selling_cost_pct').value) / 100 || 0.05;
+
+            const total_cost = purchase_total + reno_total + closing_total;
+            const debt_total = total_cost * ltv;
+            const equity_total = total_cost - debt_total;
+
+            // Capital per key
+            document.getElementById('purchase_pkey').innerHTML = formatNumber(Math.round(purchase_total / units));
+            document.getElementById('reno_pkey').innerHTML = formatNumber(Math.round(reno_total / units));
+            document.getElementById('closing_pkey').innerHTML = formatNumber(Math.round(closing_total / units));
+            document.getElementById('total_cost').innerHTML = formatNumber(total_cost);
+            document.getElementById('total_pkey').innerHTML = formatNumber(Math.round(total_cost / units));
+            document.getElementById('equity_total').innerHTML = formatNumber(equity_total);
+            document.getElementById('equity_pkey').innerHTML = formatNumber(Math.round(equity_total / units));
+            document.getElementById('debt_total').innerHTML = formatNumber(debt_total);
+            document.getElementById('debt_pkey').innerHTML = formatNumber(Math.round(debt_total / units));
+            document.getElementById('total_cost2').innerHTML = formatNumber(total_cost);
+            document.getElementById('total_pkey2').innerHTML = formatNumber(Math.round(total_cost / units));
+
+            // Income
+            const egi_ip = gpr_ip * (1 - vac_rate);
+            const egi_s = gpr_s * (1 - vac_rate);
+            const vac_amount_ip = gpr_ip * vac_rate;
+            const vac_amount_s = gpr_s * vac_rate;
+            if (vac_amount_ip > 0) {
+                document.getElementById('vac_ip').innerHTML = `(${formatNumber(Math.round(vac_amount_ip))})`;
+            } else {
+                document.getElementById('vac_ip').innerHTML = '';
+            }
+            if (vac_amount_s > 0) {
+                document.getElementById('vac_s').innerHTML = `(${formatNumber(Math.round(vac_amount_s))})`;
+            } else {
+                document.getElementById('vac_s').innerHTML = '';
+            }
+            document.getElementById('egi_ip').innerHTML = formatNumber(Math.round(egi_ip));
+            document.getElementById('egi_s').innerHTML = formatNumber(Math.round(egi_s));
+
+            // Expenses
+            const mgmt_ip = egi_ip * mgmt_pct;
+            const mgmt_s = egi_s * mgmt_pct;
+            const total_exp_ip = re_tax_ip + ins_ip + util_ip + mgmt_ip + rep_ip;
+            const total_exp_s = re_tax_s + ins_s + util_s + mgmt_s + rep_s;
+            const noi_ip = egi_ip - total_exp_ip;
+            const noi_s = egi_s - total_exp_s;
+            const noi_margin_ip = (noi_ip / egi_ip * 100) || 0;
+            const noi_margin_s = (noi_s / egi_s * 100) || 0;
+            document.getElementById('mgmt_ip').innerHTML = formatNumber(Math.round(mgmt_ip));
+            document.getElementById('mgmt_s').innerHTML = formatNumber(Math.round(mgmt_s));
+            document.getElementById('total_exp_ip').innerHTML = formatNumber(Math.round(total_exp_ip));
+            document.getElementById('total_exp_s').innerHTML = formatNumber(Math.round(total_exp_s));
+            document.getElementById('noi_ip').innerHTML = formatNumber(Math.round(noi_ip));
+            document.getElementById('noi_s').innerHTML = formatNumber(Math.round(noi_s));
+            document.getElementById('noi_margin_ip').innerHTML = formatPercent(noi_margin_ip);
+            document.getElementById('noi_margin_s').innerHTML = formatPercent(noi_margin_s);
+
+            // Debt Service and DSCR
+            const debt_service = calcDebtService(debt_total, interest_rate, amort_years);
+            const dscr_ip = noi_ip / debt_service || 0;
+            const dscr_s = noi_s / debt_service || 0;
+            document.getElementById('debt_service').innerHTML = formatMoney(debt_service);
+            document.getElementById('dscr_ip').innerHTML = formatPercent(dscr_ip);
+            document.getElementById('dscr_s').innerHTML = formatPercent(dscr_s);
+
+            // Yields
+            const yield_ip = (noi_ip / total_cost * 100) || 0;
+            const yield_s = (noi_s / total_cost * 100) || 0;
+            document.getElementById('yield_ip').innerHTML = formatPercent(yield_ip);
+            document.getElementById('yield_s').innerHTML = formatPercent(yield_s);
+
+            // Disposition
+            const gross_sale = noi_s / exit_cap;
+            const net_sale = gross_sale * (1 - selling_cost_pct);
+            const equity_exit = net_sale - debt_total;
+            const profit = equity_exit - equity_total;
+            const equity_multiple = equity_exit / equity_total || 0;
+            document.getElementById('net_sale').innerHTML = formatNumber(Math.round(net_sale));
+            document.getElementById('sale_pkey').innerHTML = formatNumber(Math.round(net_sale / units));
+            document.getElementById('profit').innerHTML = formatNumber(Math.round(profit));
+            document.getElementById('profit_pkey').innerHTML = formatNumber(Math.round(profit / units));
+            document.getElementById('equity_multiple').innerHTML = formatPercent(equity_multiple);
+        }
+
+        function exportToCSV() {
+            const csvRows = [];
+
+            // Global Parameters
+            csvRows.push(['Global Parameters']);
+            csvRows.push(['Number of Units', document.getElementById('units').value]);
+            csvRows.push(['Vacancy Rate (%)', document.getElementById('vac_rate').value]);
+            csvRows.push(['Management Fee (%)', document.getElementById('mgmt_pct').value]);
+            csvRows.push(['Selling Costs (%)', document.getElementById('selling_cost_pct').value]);
+            csvRows.push([]);
+
+            // Capital Stack
+            csvRows.push(['Capital Stack', '', 'Total', '$/Key']);
+            csvRows.push(['Purchase Price', '', document.getElementById('purchase_total').value, document.getElementById('purchase_pkey').innerText]);
+            csvRows.push(['Renovations', '', document.getElementById('reno_total').value, document.getElementById('reno_pkey').innerText]);
+            csvRows.push(['Closing Costs', '', document.getElementById('closing_total').value, document.getElementById('closing_pkey').innerText]);
+            csvRows.push(['Total', '', document.getElementById('total_cost').innerText, document.getElementById('total_pkey').innerText]);
+            csvRows.push(['Equity', '', document.getElementById('equity_total').innerText, document.getElementById('equity_pkey').innerText]);
+            csvRows.push(['Debt', '', document.getElementById('debt_total').innerText, document.getElementById('debt_pkey').innerText]);
+            csvRows.push(['Total', '', document.getElementById('total_cost2').innerText, document.getElementById('total_pkey2').innerText]);
+            csvRows.push([]);
+
+            // Debt Terms
+            csvRows.push(['Debt Terms', 'Value']);
+            csvRows.push(['LTV (%)', document.getElementById('ltv').value]);
+            csvRows.push(['Interest Rate (%)', document.getElementById('interest_rate').value]);
+            csvRows.push(['Amortization (years)', document.getElementById('amort_years').value]);
+            csvRows.push(['Exit Cap Rate (%)', document.getElementById('exit_cap').value]);
+            csvRows.push([]);
+
+            // Income
+            csvRows.push(['Income', '', 'In-Place', 'Stabilized']);
+            csvRows.push(['Gross Potential Rent', '', document.getElementById('gpr_ip').value, document.getElementById('gpr_s').value]);
+            const vac_ip_text = document.getElementById('vac_ip').innerText;
+            const vac_s_text = document.getElementById('vac_s').innerText;
+            csvRows.push(['Vacancy', '', vac_ip_text || '0', vac_s_text || '0']);
+            csvRows.push(['Revenue', '', document.getElementById('egi_ip').innerText, document.getElementById('egi_s').innerText]);
+            csvRows.push([]);
+
+            // Expenses
+            csvRows.push(['Expenses', '', 'In-Place', 'Stabilized']);
+            csvRows.push(['RE Taxes', '', document.getElementById('re_tax_ip').value, document.getElementById('re_tax_s').value]);
+            csvRows.push(['Insurance', '', document.getElementById('ins_ip').value, document.getElementById('ins_s').value]);
+            csvRows.push(['Utilities', '', document.getElementById('util_ip').value, document.getElementById('util_s').value]);
+            csvRows.push(['Management', '', document.getElementById('mgmt_ip').innerText, document.getElementById('mgmt_s').innerText]);
+            csvRows.push(['Repairs & Maintenance', '', document.getElementById('rep_ip').value, document.getElementById('rep_s').value]);
+            csvRows.push(['Total Expenses', '', document.getElementById('total_exp_ip').innerText, document.getElementById('total_exp_s').innerText]);
+            csvRows.push(['NOI', '', document.getElementById('noi_ip').innerText, document.getElementById('noi_s').innerText]);
+            csvRows.push(['NOI Margin (%)', '', document.getElementById('noi_margin_ip').innerText, document.getElementById('noi_margin_s').innerText]);
+            csvRows.push([]);
+
+            // Metrics
+            csvRows.push(['Metrics', 'In-Place', 'Stabilized']);
+            csvRows.push(['Debt Service', document.getElementById('debt_service').innerText, '']);
+            csvRows.push(['DSCR', document.getElementById('dscr_ip').innerText, document.getElementById('dscr_s').innerText]);
+            csvRows.push(['Yield (%)', document.getElementById('yield_ip').innerText, document.getElementById('yield_s').innerText]);
+            csvRows.push(['Market Cap Rate (%)', '6.50', '']);
+            csvRows.push([]);
+
+            // Disposition
+            csvRows.push(['Disposition', '', 'Total', '$/Key']);
+            csvRows.push(['Sale', '', document.getElementById('net_sale').innerText, document.getElementById('sale_pkey').innerText]);
+            csvRows.push(['Profit', '', document.getElementById('profit').innerText, document.getElementById('profit_pkey').innerText]);
+            csvRows.push(['Equity Multiple', '', document.getElementById('equity_multiple').innerText, '']);
+
+            // Convert to CSV string
+            const csvContent = csvRows.map(row => row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',')).join('\n');
+
+            // Download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'back_of_envelope_model.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', updateAll);
+            });
+            document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+            updateAll();
+        });
+    </script>
+</body>
+</html>
