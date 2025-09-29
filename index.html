@@ -282,9 +282,11 @@
                             <tr><td>Utilities</td><td class="numeric"><input id="util_ip" type="number" value="35000"></td></tr>
                             <tr><td>Management</td><td class="numeric"><span id="mgmt_ip"></span></td></tr>
                             <tr><td>Repairs & Maintenance</td><td class="numeric"><input id="rep_ip" type="number" value="25000"></td></tr>
+                            <tr><td>General & Admin</td><td class="numeric"><input id="ga_ip" type="number" value="0"></td></tr>
+                            <tr><td>Payroll</td><td class="numeric"><input id="payroll_ip" type="number" value="0"></td></tr>
                             <tr class="highlight"><td><strong>Total Expenses</strong></td><td class="numeric"><span id="total_exp_ip"></span></td></tr>
                             <tr class="highlight"><td><strong>NOI</strong></td><td class="numeric"><span id="noi_ip"></span></td></tr>
-                            <tr><td>NOI Margin</td><td class="numeric"><span id="noi_margin_ip"></span>%</td></tr>
+                            <tr><td>Expense Ratio</td><td class="numeric"><span id="expense_ratio_ip"></span>%</td></tr>
                         </tbody>
                     </table>
                     <table>
@@ -298,9 +300,11 @@
                             <tr><td>Utilities</td><td class="numeric"><input id="util_s" type="number" value="36500"></td></tr>
                             <tr><td>Management</td><td class="numeric"><span id="mgmt_s"></span></td></tr>
                             <tr><td>Repairs & Maintenance</td><td class="numeric"><input id="rep_s" type="number" value="52000"></td></tr>
+                            <tr><td>General & Admin</td><td class="numeric"><input id="ga_s" type="number" value="0"></td></tr>
+                            <tr><td>Payroll</td><td class="numeric"><input id="payroll_s" type="number" value="0"></td></tr>
                             <tr class="highlight"><td><strong>Total Expenses</strong></td><td class="numeric"><span id="total_exp_s"></span></td></tr>
                             <tr class="highlight"><td><strong>NOI</strong></td><td class="numeric"><span id="noi_s"></span></td></tr>
-                            <tr><td>NOI Margin</td><td class="numeric"><span id="noi_margin_s"></span>%</td></tr>
+                            <tr><td>Expense Ratio</td><td class="numeric"><span id="expense_ratio_s"></span>%</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -366,7 +370,11 @@
             const util_ip = parseFloat(document.getElementById('util_ip').value) || 35000;
             const util_s = parseFloat(document.getElementById('util_s').value) || 36500;
             const rep_ip = parseFloat(document.getElementById('rep_ip').value) || 25000;
+            const ga_ip = parseFloat(document.getElementById('ga_ip').value) || 0;
+            const payroll_ip = parseFloat(document.getElementById('payroll_ip').value) || 0;
             const rep_s = parseFloat(document.getElementById('rep_s').value) || 52000;
+            const ga_s = parseFloat(document.getElementById('ga_s').value) || 0;
+            const payroll_s = parseFloat(document.getElementById('payroll_s').value) || 0;
             const mgmt_pct = parseFloat(document.getElementById('mgmt_pct').value) / 100 || 0.10;
             const selling_cost_pct = parseFloat(document.getElementById('selling_cost_pct').value) / 100 || 0.05;
 
@@ -408,20 +416,20 @@
             // Expenses
             const mgmt_ip = egi_ip * mgmt_pct;
             const mgmt_s = egi_s * mgmt_pct;
-            const total_exp_ip = re_tax_ip + ins_ip + util_ip + mgmt_ip + rep_ip;
-            const total_exp_s = re_tax_s + ins_s + util_s + mgmt_s + rep_s;
+            const total_exp_ip = re_tax_ip + ins_ip + util_ip + mgmt_ip + rep_ip + ga_ip + payroll_ip;
+            const total_exp_s = re_tax_s + ins_s + util_s + mgmt_s + rep_s + ga_s + payroll_s;
             const noi_ip = egi_ip - total_exp_ip;
             const noi_s = egi_s - total_exp_s;
-            const noi_margin_ip = (noi_ip / egi_ip * 100) || 0;
-            const noi_margin_s = (noi_s / egi_s * 100) || 0;
+            const expense_ratio_ip = (total_exp_ip / egi_ip * 100) || 0;
+            const expense_ratio_s = (total_exp_s / egi_s * 100) || 0;
             document.getElementById('mgmt_ip').innerHTML = formatNumber(Math.round(mgmt_ip));
             document.getElementById('mgmt_s').innerHTML = formatNumber(Math.round(mgmt_s));
             document.getElementById('total_exp_ip').innerHTML = formatNumber(Math.round(total_exp_ip));
             document.getElementById('total_exp_s').innerHTML = formatNumber(Math.round(total_exp_s));
             document.getElementById('noi_ip').innerHTML = formatNumber(Math.round(noi_ip));
             document.getElementById('noi_s').innerHTML = formatNumber(Math.round(noi_s));
-            document.getElementById('noi_margin_ip').innerHTML = formatPercent(noi_margin_ip);
-            document.getElementById('noi_margin_s').innerHTML = formatPercent(noi_margin_s);
+            document.getElementById('expense_ratio_ip').innerHTML = formatPercent(expense_ratio_ip);
+            document.getElementById('expense_ratio_s').innerHTML = formatPercent(expense_ratio_s);
 
             // Debt Service and DSCR
             const debt_service = calcDebtService(debt_total, interest_rate, amort_years);
@@ -496,9 +504,11 @@
             csvRows.push(['Utilities', '', document.getElementById('util_ip').value, document.getElementById('util_s').value]);
             csvRows.push(['Management', '', document.getElementById('mgmt_ip').innerText, document.getElementById('mgmt_s').innerText]);
             csvRows.push(['Repairs & Maintenance', '', document.getElementById('rep_ip').value, document.getElementById('rep_s').value]);
+            csvRows.push(['General & Admin', '', document.getElementById('ga_ip').value, document.getElementById('ga_s').value]);
+            csvRows.push(['Payroll', '', document.getElementById('payroll_ip').value, document.getElementById('payroll_s').value]);
             csvRows.push(['Total Expenses', '', document.getElementById('total_exp_ip').innerText, document.getElementById('total_exp_s').innerText]);
             csvRows.push(['NOI', '', document.getElementById('noi_ip').innerText, document.getElementById('noi_s').innerText]);
-            csvRows.push(['NOI Margin (%)', '', document.getElementById('noi_margin_ip').innerText, document.getElementById('noi_margin_s').innerText]);
+            csvRows.push(['Expense Ratio (%)', '', document.getElementById('expense_ratio_ip').innerText, document.getElementById('expense_ratio_s').innerText]);
             csvRows.push([]);
 
             // Metrics
